@@ -7,6 +7,8 @@ var compass = require('gulp-compass');
 var connect = require('gulp-connect');
 var gulpif = require('gulp-if');
 var uglify = require('gulp-uglify');
+var minifyHTML = require('gulp-minify-html');
+var minifyJSON = require('gulp-jsonminify');
 
 var env,
     coffeeSources,
@@ -20,10 +22,10 @@ var env,
 env = process.env.NODE_ENV || 'development';
 
 if (env==='development') {
-  outputDir = 'builds/development';
+  outputDir = 'builds/development/';
   sassStyle = 'expanded';
 } else {
-  outputDir = 'builds/production';
+  outputDir = 'builds/production/';
   sassStyle = 'compressed';
 }
 
@@ -35,8 +37,8 @@ jsSources = [
   'components/scripts/template.js',
 ];
 sassSources = ['components/sass/style.scss'];
-htmlSources = [outputDir + '/*.html'];
-jsonSources = [outputDir + '/js/*.json'];
+htmlSources = ['builds/development/*.html'];
+jsonSources = ['builds/development/js/*.json'];
 
 gulp.task('coffee', function() {
   gulp.src(coffeeSources)
@@ -51,7 +53,7 @@ gulp.task('js', function() {
     .pipe(concat('script.js'))
     .pipe(browserify())
     .pipe(gulpif(env === 'production', uglify()))
-    .pipe(gulp.dest(outputDir + '/js'))
+    .pipe(gulp.dest(outputDir + 'js'))
     .pipe(connect.reload())
 });
 
@@ -59,10 +61,10 @@ gulp.task('compass', function() {
   gulp.src(sassSources)
     .pipe(compass({
       sass: 'components/sass',
-      image: outputDir + '/images',
+      image: outputDir + 'images',
       style: sassStyle
     }))
-    .pipe(gulp.dest(outputDir + '/css'))
+    .pipe(gulp.dest(outputDir + 'css'))
     .pipe(connect.reload())
 });
 
@@ -76,18 +78,22 @@ gulp.task('watch', function() {
 
 gulp.task('connect', function() {
   connect.server({
-    root: outputDir + '/',
+    root: outputDir,
     livereload: true
   });
 });
 
 gulp.task('html', function() {
   gulp.src(htmlSources)
+    .pipe(gulpif(env === 'production', minifyHTML()))
+    .pipe(gulpif(env === 'production', gulp.dest(outputDir)))
     .pipe(connect.reload())
 });
 
 gulp.task('json', function() {
   gulp.src(jsonSources)
+  .pipe(gulpif(env === 'production', minifyJSON()))
+  .pipe(gulpif(env === 'production', gulp.dest(outputDir + 'js')))
     .pipe(connect.reload())
 });
 
