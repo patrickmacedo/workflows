@@ -9,6 +9,8 @@ var gulpif = require('gulp-if');
 var uglify = require('gulp-uglify');
 var minifyHTML = require('gulp-minify-html');
 var minifyJSON = require('gulp-jsonminify');
+var imagemin = require('gulp-imagemin');
+var pngcrush = require('imagemin-pngcrush');
 
 var env,
     coffeeSources,
@@ -39,6 +41,7 @@ jsSources = [
 sassSources = ['components/sass/style.scss'];
 htmlSources = ['builds/development/*.html'];
 jsonSources = ['builds/development/js/*.json'];
+imagesSources = ['builds/development/images/**/*.*'];
 
 gulp.task('coffee', function() {
   gulp.src(coffeeSources)
@@ -74,6 +77,7 @@ gulp.task('watch', function() {
   gulp.watch('components/sass/*.scss', ['compass']);
   gulp.watch(htmlSources, ['html']);
   gulp.watch(jsonSources, ['json']);
+  gulp.watch(imagesSources, ['images']);
 });
 
 gulp.task('connect', function() {
@@ -92,9 +96,19 @@ gulp.task('html', function() {
 
 gulp.task('json', function() {
   gulp.src(jsonSources)
-  .pipe(gulpif(env === 'production', minifyJSON()))
-  .pipe(gulpif(env === 'production', gulp.dest(outputDir + 'js')))
+    .pipe(gulpif(env === 'production', minifyJSON()))
+    .pipe(gulpif(env === 'production', gulp.dest(outputDir + 'js')))
+    .pipe(connect.reload())
+});
+gulp.task('images', function() {
+  gulp.src(imagesSources)
+    .pipe(gulpif(env === 'production', imagemin({
+      progressive: true,
+      svgoPlugins: [{removeViewBox: false}],
+      use: [pngcrush()]
+    })))
+    .pipe(gulpif(env === 'production', gulp.dest(outputDir + 'images')))
     .pipe(connect.reload())
 });
 
-gulp.task('default', ['html', 'json', 'coffee', 'js', 'compass', 'connect', 'watch']);
+gulp.task('default', ['html', 'json', 'coffee', 'js', 'compass', 'images', 'connect', 'watch']);
