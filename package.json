@@ -1,0 +1,10 @@
+{
+  "name": "workflows",
+  "version": "0.0.1",
+  "description": "Projeto de teste para aprimorar conhecimentos de workflow",
+  "repository": {
+    "type": "git",
+    "url": "?.git"
+  },
+  "author": "Patrick Macedo"
+}
